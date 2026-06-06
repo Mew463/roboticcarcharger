@@ -1,0 +1,19 @@
+{
+    "python.languageServer": "Pylance",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingModuleSource": "none"
+    },
+    "python.analysis.extraPaths": [
+        "",
+        "/Users/mingweiyeoh/.vscode/extensions/joedevivo.vscode-circuitpython-0.1.20-darwin-arm64/stubs",
+        "/Users/mingweiyeoh/Library/Application Support/Code/User/globalStorage/joedevivo.vscode-circuitpython/bundle/20260520/adafruit-circuitpython-bundle-py-20260520/lib"
+    ],
+    "circuitpython.board.version": null,
+    "files.exclude": {
+        "**/__pycache__": true,
+        ".lgd-nfy0": true
+    },
+    "markdown.copyFiles.destination": {
+        "**/*": "${documentWorkspaceFolder}/images/"
+    }
+}

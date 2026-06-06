@@ -1,0 +1,5 @@
+secrets.json
+__pycache__/
+*.pyc
+testing/cameracalibration/calib_images*
+output.log
