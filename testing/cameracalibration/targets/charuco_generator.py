@@ -1,9 +1,9 @@
 import cv2
-path = "cameracalibration/targets/"
+path = "testing/cameracalibration/targets/"
 def homing_charuco():
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
 
-    board = cv2.aruco.CharucoBoard((6, 8), 30, 20, aruco_dict)
+    board = cv2.aruco.CharucoBoard((4, 6), 0.05, 0.04, aruco_dict)
 
     img = board.generateImage((2480, 3508))  # A4 @ 300 DPI
 

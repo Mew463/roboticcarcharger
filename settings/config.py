@@ -28,17 +28,17 @@ class ChassisConfig:
 
 class ElevatorConfig:
     STEPS_PER_CM = 418.75
-    CHARGE_PORT_HEIGHT_CM = 23.5
+    CHARGE_PORT_HEIGHT_CM = 22
 
 class ArmConfig:
-    sucMotorThresholdCurrent = 2320
+    sucMotorThresholdCurrent = 2315
     servoThresholdcurrent = 2800
     
     chargerServoStartPos = 157
-    chargerServoEndPos = 39
+    chargerServoEndPos = 42
     
-    CAMBEHINDPOS = 45
-    CAMINFRONTPOS = 170
+    CAMHOMINGPOS = 170
+    CAMTESLAPOS = 70
     
 class CameraConfig:
     ### 99$ Camera 720p 60fps
@@ -61,7 +61,7 @@ class CameraConfig:
     
     dist = np.array([-0.01196480038446067, -0.04646810566273238, -0.000800085816789049, -0.000435858940564193, 0.01317977322544761], dtype=np.float32)  
     INITIAL_BRIGHTNESS = 0
-    SETPOINT_BRIGHTNESS = 35
+    SETPOINT_BRIGHTNESS = 20 # (Going higher has issues with being too bright and causing too much glare)
 
 @dataclass
 class DistanceThreshold:

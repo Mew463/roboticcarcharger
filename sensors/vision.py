@@ -14,6 +14,11 @@ class CharucoTracking():
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'YUYV'))
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        
+        
+        if not self.cap.isOpened():
+            raise RuntimeError("Camera initialization failed")
 
         # Check the actual result
         w = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
@@ -24,9 +29,9 @@ class CharucoTracking():
         
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_1000)
         self.board_wall = cv2.aruco.CharucoBoard(
-            (6, 8),        # squaresX, squaresY
-            0.04,          # square length (meters)
-            0.025,         # marker length
+            (4, 6),        # squaresX, squaresY
+            0.05,          # square length (meters)
+            0.04,         # marker length
             self.aruco_dict
         )
         
@@ -207,7 +212,7 @@ class CharucoTracking():
                 x_coords = all_points[:, 0]
                 pixel_width = np.max(x_coords) - np.min(x_coords)
                 if use_wall_board:
-                    BOARD_WIDTH_METERS = 6 * 0.04
+                    BOARD_WIDTH_METERS = 6 * 0.05
                 else:
                     BOARD_WIDTH_METERS = 6 * 0.014
                 distance = (BOARD_WIDTH_METERS * CameraConfig.K[0,0]) / pixel_width

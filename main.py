@@ -9,7 +9,11 @@ from algorithms.robot_states import *
 from api.tesla_control import TeslaControl
 from api.telegram_control import TelegramControl, MessagingReceiverWrapper
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
 logger = logging.getLogger("Robot")
 logging.getLogger("urllib3").setLevel(logging.WARNING) # Surpress noisy loggers
 logging.getLogger("requests").setLevel(logging.WARNING) # Surpress noisy loggers
@@ -32,12 +36,14 @@ car_detected_start_time = time.time()
 car_gone_start_time = time.time()
 
 def is_car_in_distance(vals: DistanceThreshold) -> bool:
-    return (abs(robot.lidar_mgr.get_angle(0) - vals.target_distance) < vals.threshold)
+    return (abs(robot.lidar_mgr.get_angle(300) - vals.target_distance) < vals.threshold)
 
-if (is_car_in_distance(CarConfig.CAR_PLUGGED_DIST)):
-    robot.state = RobotStates.IDLE_CHARGING
-    logger.info("SET TO IDLE_CHARGING!")
-    messaging.send_message("SET TO IDLE_CHARGING!")
+# if (is_car_in_distance(CarConfig.CAR_PLUGGED_DIST)):
+#     robot.state = RobotStates.IDLE_CHARGING
+#     logger.info("SET TO IDLE_CHARGING!")
+#     messaging.send_message("SET TO IDLE_CHARGING!")
+    
+robot.home(Movement)
 
 try:
     while not stop_event.is_set(): 
@@ -117,7 +123,7 @@ try:
 
             robot.home(Movement)
         
-            robot.cam_servo.set_angle(ArmConfig.CAMINFRONTPOS)
+            robot.cam_servo.set_angle(ArmConfig.CAMTESLAPOS)
             robot.leds.set_static(Colors.GREEN)
             time.sleep(1)
             robot.leds.set_static(Colors.BLACK)
@@ -126,9 +132,11 @@ try:
             messaging.send_message("Successfully Homed")
 
 except KeyboardInterrupt:
+    robot.leds.set_static(Colors.GREEN) # Indicate crashing occurred
     robot.lidar_mgr.stop()
 
 except Exception as e:
     import traceback
     traceback.print_exc()
     robot.lidar_mgr.stop()
+    robot.leds.set_static(Colors.RED) # Indicate crashing occurred

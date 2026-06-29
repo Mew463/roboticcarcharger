@@ -22,7 +22,7 @@ stepper_curpos = ElevatorConfig.CHARGE_PORT_HEIGHT_CM
 stepper_increment = 1
 servo_increment = 5
 servo_curpos = ArmConfig.chargerServoStartPos
-camservo_curpos = ArmConfig.CAMBEHINDPOS
+camservo_curpos = ArmConfig.CAMHOMINGPOS
 suctmotor_tog = False
 valve_solenoid_tog = False
 
@@ -68,23 +68,23 @@ def handle_key(ch):
         robot.stepper.moveTo(stepper_curpos)
         print(stepper_curpos)
 
-    elif ch == 'o':  # CAM SERVO
+    elif ch == 'o':  # CAM SERVO UP
         camservo_curpos += servo_increment
         robot.cam_servo.set_angle(camservo_curpos)
         print(camservo_curpos)
 
-    elif ch == 'l':
+    elif ch == 'l': # CAM SERVO DOWN
         camservo_curpos -= servo_increment
         robot.cam_servo.set_angle(camservo_curpos)
         print(camservo_curpos)
-    elif ch == 'p':
-        robot.charger_servo.enable()
-        servo_curpos += servo_increment
-        robot.charger_servo.set_angle(servo_curpos)
-
-    elif ch == ';':
+    elif ch == 'p': # CHARGE SERVO INSERT
         robot.charger_servo.enable()
         servo_curpos -= servo_increment
+        robot.charger_servo.set_angle(servo_curpos)
+
+    elif ch == ';': # CHARGE SERVO REMOVE
+        robot.charger_servo.enable()
+        servo_curpos += servo_increment
         robot.charger_servo.set_angle(servo_curpos)
 
     elif ch == 'r':
@@ -103,14 +103,23 @@ def handle_key(ch):
              robot.valve_solenoid.setSpeed(0.5)
         else:
             robot.valve_solenoid.setSpeed(0)
-        # robot.valve_solenoid.setSpeed(1 if valve_solenoid_tog else 0)
-    elif ch == '1':
+            
+    elif ch == '1': # Take photo of wall board
         print(robot.charuco_tracking.get_frame(True))
         robot.charuco_tracking.show_frame()
 
-    elif ch == '2':
+    elif ch == '2': # Take photo of car tracking board
         print(robot.charuco_tracking.get_frame(False))
         robot.charuco_tracking.show_frame()
+        
+    elif ch == '3': # Increase camera brightness
+        print(robot.charuco_tracking.get_frame(False))
+        robot.charuco_tracking.show_frame()
+        
+    elif ch == '4': # Decrease camera brightness
+        print(robot.charuco_tracking.get_frame(False))
+        robot.charuco_tracking.show_frame()
+
 
     elif ch == 'x':
         return False  # signal exit

@@ -56,9 +56,7 @@ class Robot():
         else:
             return False    
     def _move_lateral(self, is_reversed):
-        dir = -1
-        if is_reversed:
-            dir = 1
+        dir = 1 if is_reversed else -1
         self.chassis.move_vector_smooth(dir, 0, 0) 
         time.sleep(0.75)
     
@@ -70,22 +68,22 @@ class Robot():
         self.leds.set_circle(Colors.BLUE)
         self.stepper.home(4000)
         self.chassis.enable()
-        while (self.lidar_mgr.get_angle(0) > 550): # Drive until we are at the car
-            time.sleep(0.1) # Necessary to allow lidar to update
-            self.chassis.setVector(0, 1, 0) 
-            if (self.lidar_mgr.get_angle(180) + self.lidar_mgr.get_angle(0) > CarConfig.MAX_MOVING_DIST):
-                # Switch to homing state cause something has gone wrong
-                pass
+        # while (self.lidar_mgr.get_angle(0) > 550): # Drive until we are at the car
+        #     time.sleep(0.1) # Necessary to allow lidar to update
+        #     self.chassis.setVector(0, 1, 0) 
+        self.chassis.move_vector_smooth(0, -1, 0)
+        time.sleep(1)
+        
         self._move_lateral(False)
         self.leds.set_circle(Colors.PURPLE)
-        while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
-            time.sleep(0.1) # Necessary to allow lidar to update
-            self.chassis.setVector(0, 0.5, 0) 
+        # while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
+        #     time.sleep(0.1) # Necessary to allow lidar to update
+        #     self.chassis.setVector(0, 0.5, 0) 
 
         self.chassis.move_vector_smooth(0, 0, 0)
         
     def align(self, Movement, tesla_control:TeslaControl):
-        self.cam_servo.set_angle(ArmConfig.CAMINFRONTPOS)
+        self.cam_servo.set_angle(ArmConfig.CAMTESLAPOS)
         self.stepper.moveTo(ElevatorConfig.CHARGE_PORT_HEIGHT_CM)
         tesla_control.open_or_unlatch_charge_port() # A better use of elevator delay 
         cur_led_brightness = CameraConfig.INITIAL_BRIGHTNESS
@@ -173,26 +171,26 @@ class Robot():
         self.chassis.enable()
         self.leds.set_circle(Colors.BLUE)
         
-        while (self.lidar_mgr.get_angle(0) < 500): # Drive until we far enough away from car
+        while (self.lidar_mgr.get_angle(0) < 300): # Drive until we far enough away from car
             time.sleep(0.1) # Necessary to allow lidar to update
             self.chassis.setVector(0, -1, 0) 
         self.valve_solenoid.setSpeed(0)
-        self.cam_servo.set_angle(ArmConfig.CAMBEHINDPOS)
+        self.cam_servo.set_angle(ArmConfig.CAMHOMINGPOS)
         self.stepper.home(4000)
         self._move_lateral(True)
         
     def home(self, Movement):
         self.leds.set_static(Colors.WHITE)
-        self.chassis.move_vector_smooth(0, -1, 0) # Go a bit closer to the wall so that leds can hit the target
-        time.sleep(1)
+        # self.chassis.move_vector_smooth(0, -1, 0) # Go a bit closer to the wall so that leds can hit the target
+        # time.sleep(1)
         self.chassis.stop()
         # Uses yaw - More positive is robot left side closer to wall
-        while (not Movement.move_to_tag_position(x = -0.053, y = 0.75, yaw = 0.5, use_wall_board = True).is_success(precision_multiplier = 1.5)): # Home itself
+        while (not Movement.move_to_tag_position(x = -0.192, y = 0.812, yaw = -8.8, use_wall_board = True).is_success(precision_multiplier = 1.5)): # Home itself
             pass
         
-        while (self.lidar_mgr.get_angle(180) > 100): # Drive until we are pretty close to the wall
-            time.sleep(0.1) # Necessary to allow lidar to update
-            self.chassis.setVector(0, -0.6, 0) 
+        # while (self.lidar_mgr.get_angle(180) > 100): # Drive until we are pretty close to the wall
+        #     time.sleep(0.1) # Necessary to allow lidar to update
+        #     self.chassis.setVector(0, -0.6, 0) 
         
         self.chassis.disable()
         

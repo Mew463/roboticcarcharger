@@ -146,7 +146,8 @@ class FusedMovement:
         
     def move_to_tag_position(self, x, y, yaw, use_wall_board : bool):
         charuco_res = self.myTracker.get_frame(use_wall_board)
-        dir_mult = -1 if use_wall_board else 1
+        dir_mult = 1
+        dir_mult = -1 if use_wall_board else 1 
         
         loss_ratio = sum(self.am_lost) / len(self.am_lost)
         
@@ -170,9 +171,9 @@ class FusedMovement:
             self.chassis.setVector(x_pwr, y_pwr, 0)
         elif (tracking_type == TrackingTypes.BRIEF_LOST):
             self.am_lost.append(True)
-            self.chassis.setVector(self.PositionControllerX.do_translate(None) * 1 * dir_mult, 
-                                self.PositionControllerY.do_translate(None) * -1 * dir_mult, 
-                                self.RotationControllerYaw.do_translate(None) * 1 * dir_mult)
+            # self.chassis.setVector(self.PositionControllerX.do_translate(None) * 1 * dir_mult, 
+            #                     self.PositionControllerY.do_translate(None) * -1 * dir_mult, 
+            #                     self.RotationControllerYaw.do_translate(None) * 1 * dir_mult)
         elif (tracking_type == TrackingTypes.LOST):
             self.chassis.stop()
         return self
