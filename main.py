@@ -43,7 +43,8 @@ def is_car_in_distance(vals: DistanceThreshold) -> bool:
 #     logger.info("SET TO IDLE_CHARGING!")
 #     messaging.send_message("SET TO IDLE_CHARGING!")
     
-robot.home(Movement)
+# robot.state = RobotStates.REMOVING
+# robot.home(Movement)
 
 try:
     while not stop_event.is_set(): 
@@ -60,7 +61,7 @@ try:
                     robot.leds.set_static(Colors.BLACK)
                     logger.info("Manual car charging criteria not met!")
                     if not car_parked_in_distance:
-                        messaging.send_message(f"Car not detected in range ({robot.lidar_mgr.get_angle(0)} mm)")
+                        messaging.send_message(f"Car not detected in range ({robot.lidar_mgr.get_angle(300)} mm)")
                     if not car_ready_to_charge:
                         messaging.send_message("Required car telemetry not met")
             
@@ -69,7 +70,7 @@ try:
                 car_ready_to_charge = my_blue_panther.car_ready_to_be_charged()
                 
             if (was_car_gone == False): # Handle resetting the car_gone flag
-                if (robot.lidar_mgr.get_angle(0) > CarConfig.CAR_PARKED_DIST.target_distance + CarConfig.CAR_PARKED_DIST.threshold * 2 and time.time() - car_gone_start_time > 10):
+                if (robot.lidar_mgr.get_angle(300) > CarConfig.CAR_PARKED_DIST.target_distance + CarConfig.CAR_PARKED_DIST.threshold * 2 and time.time() - car_gone_start_time > 10):
                     car_gone_start_time = time.time()
                     logger.info("Lidar detected car has left!")
                     car_state = my_blue_panther.get_charging_related_data()
@@ -132,11 +133,11 @@ try:
             messaging.send_message("Successfully Homed")
 
 except KeyboardInterrupt:
-    robot.leds.set_static(Colors.GREEN) # Indicate crashing occurred
-    robot.lidar_mgr.stop()
-
+    print("Keyboard interrupt!")
+    robot.leds.set_static(Colors.GREEN) # Indicate keyboard exception occurred
 except Exception as e:
     import traceback
     traceback.print_exc()
-    robot.lidar_mgr.stop()
     robot.leds.set_static(Colors.RED) # Indicate crashing occurred
+finally: 
+    robot.lidar_mgr.stop()

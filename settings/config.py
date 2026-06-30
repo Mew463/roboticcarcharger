@@ -28,7 +28,7 @@ class ChassisConfig:
 
 class ElevatorConfig:
     STEPS_PER_CM = 418.75
-    CHARGE_PORT_HEIGHT_CM = 22
+    CHARGE_PORT_HEIGHT_CM = 20
 
 class ArmConfig:
     sucMotorThresholdCurrent = 2315
@@ -71,8 +71,8 @@ class DistanceThreshold:
 class CarConfig:
     GEOFENCE_RADIUS_METERS = 10
     CAR_PARKED_DIST = DistanceThreshold(
-        target_distance=1258,
-        threshold=350
+        target_distance=450,
+        threshold=150
     )
     CAR_PLUGGED_DIST = DistanceThreshold(
         target_distance=98.5,

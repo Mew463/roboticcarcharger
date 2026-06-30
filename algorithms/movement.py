@@ -161,8 +161,8 @@ class FusedMovement:
             self.erroryaw = yaw - res["yaw"]
             self.z_vals.append(res["z"])
             self.chassis.setVector(self.PositionControllerX.do_translate(self.errorx) * 1 * dir_mult, 
-                                   self.PositionControllerY.do_translate(self.errory) * -1 * dir_mult, 
-                                   self.RotationControllerYaw.do_translate(self.erroryaw) * 1 * dir_mult)
+                                    self.PositionControllerY.do_translate(self.errory) * -1 * dir_mult, 
+                                    self.RotationControllerYaw.do_translate(self.erroryaw) * 1)
         elif (tracking_type == TrackingTypes.POSE_EST):
             res = charuco_res["pose_est"]
             max_val = 0.5
@@ -171,9 +171,9 @@ class FusedMovement:
             self.chassis.setVector(x_pwr, y_pwr, 0)
         elif (tracking_type == TrackingTypes.BRIEF_LOST):
             self.am_lost.append(True)
-            # self.chassis.setVector(self.PositionControllerX.do_translate(None) * 1 * dir_mult, 
-            #                     self.PositionControllerY.do_translate(None) * -1 * dir_mult, 
-            #                     self.RotationControllerYaw.do_translate(None) * 1 * dir_mult)
+            self.chassis.setVector(self.PositionControllerX.do_translate(None) * 1 * dir_mult, 
+                                self.PositionControllerY.do_translate(None) * -1 * dir_mult, 
+                                self.RotationControllerYaw.do_translate(None) * 1)
         elif (tracking_type == TrackingTypes.LOST):
             self.chassis.stop()
         return self

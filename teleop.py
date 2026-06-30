@@ -88,7 +88,7 @@ def handle_key(ch):
         robot.charger_servo.set_angle(servo_curpos)
 
     elif ch == 'r':
-        print("Front:", robot.lidar_mgr.get_angle(0))
+        print("Front:", robot.lidar_mgr.get_angle(300))
 
     elif ch == 'f':
         print("Back:", robot.lidar_mgr.get_angle(180))

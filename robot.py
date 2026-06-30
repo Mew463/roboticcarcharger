@@ -56,9 +56,9 @@ class Robot():
         else:
             return False    
     def _move_lateral(self, is_reversed):
-        dir = 1 if is_reversed else -1
+        dir = -1 if is_reversed else 1
         self.chassis.move_vector_smooth(dir, 0, 0) 
-        time.sleep(0.75)
+        time.sleep(2.5)
     
     def _open_valve(self):
         self.valve_solenoid.setSpeed(1)
@@ -76,9 +76,9 @@ class Robot():
         
         self._move_lateral(False)
         self.leds.set_circle(Colors.PURPLE)
-        # while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
-        #     time.sleep(0.1) # Necessary to allow lidar to update
-        #     self.chassis.setVector(0, 0.5, 0) 
+        while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
+            time.sleep(0.1) # Necessary to allow lidar to update
+            self.chassis.setVector(0, 0.5, 0) 
 
         self.chassis.move_vector_smooth(0, 0, 0)
         
@@ -178,6 +178,8 @@ class Robot():
         self.cam_servo.set_angle(ArmConfig.CAMHOMINGPOS)
         self.stepper.home(4000)
         self._move_lateral(True)
+        self.chassis.move_vector_smooth(0, 1, 0)
+        time.sleep(0.5)
         
     def home(self, Movement):
         self.leds.set_static(Colors.WHITE)
