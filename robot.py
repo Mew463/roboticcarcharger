@@ -64,39 +64,43 @@ class Robot():
         self.valve_solenoid.setSpeed(1)
         self.valve_solenoid.setSpeed(0.5)
     
-    def approach(self):
+    def approach(self, tesla_control:TeslaControl):
+        tesla_control.open_or_unlatch_charge_port(wait_for_completion = "false") # Make sure the car opens door ASAP
+        
         self.leds.set_circle(Colors.BLUE)
         self.stepper.home(4000)
         self.chassis.enable()
-        # while (self.lidar_mgr.get_angle(0) > 550): # Drive until we are at the car
-        #     time.sleep(0.1) # Necessary to allow lidar to update
-        #     self.chassis.setVector(0, 1, 0) 
-        self.chassis.move_vector_smooth(0, -1, 0)
+        
+        self.chassis.move_vector_smooth(0, -1, 0) # backup
         time.sleep(1)
         
         self._move_lateral(False)
         self.leds.set_circle(Colors.PURPLE)
+        
+        self.chassis.move_vector_smooth(0, 0, 0.65) # Rotate a little to align better with car
+        time.sleep(0.5)
+            
         while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
             time.sleep(0.1) # Necessary to allow lidar to update
             self.chassis.setVector(0, 0.5, 0) 
 
         self.chassis.move_vector_smooth(0, 0, 0)
         
-    def align(self, Movement, tesla_control:TeslaControl):
+    def align(self, movement, tesla_control:TeslaControl):
         self.cam_servo.set_angle(ArmConfig.CAMTESLAPOS)
-        self.stepper.moveTo(ElevatorConfig.CHARGE_PORT_HEIGHT_CM)
-        tesla_control.open_or_unlatch_charge_port() # A better use of elevator delay 
+        self.stepper.moveTo(ElevatorConfig.CHARGE_PORT_HEIGHT_MM)
         cur_led_brightness = CameraConfig.INITIAL_BRIGHTNESS
         self.leds.set_static(Colors.WHITE, brightness = cur_led_brightness)
         # Move left suction cup suck more = yaw more negative 
         # Move robot leftwards = x more positive 
         target_x = -0.0798 - 0.005
         target_y = 0.308
-        target_yaw = 0
+        target_yaw = 0 - 0.1
+        target_z = -0.177
         num_attempts = 3
         for i in range(num_attempts): # ALIGNING LOOP
             
-            while (not Movement.move_to_tag_position(x = target_x, y = target_y, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 2)): 
+            while (not movement.move_to_tag_position(x = target_x, y = target_y, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 2)): 
                 
                 cur_frame_brightness = self.charuco_tracking.get_frame_brightness()
                 if cur_frame_brightness is not None:
@@ -104,26 +108,37 @@ class Robot():
                     cur_led_brightness += led_error * 0.1 # Only using I term 
                     cur_led_brightness = max(0, min(cur_led_brightness, 100))
                     self.leds.set_static(Colors.WHITE, cur_led_brightness)
-                    # print(f"{cur_led_brightness} {cur_frame_brightness}")
+                    print(f"led bright:{cur_led_brightness} frame bright: {cur_frame_brightness}")
                 pass
-
-            while (not Movement.move_to_tag_position(x = target_x, y = target_y - 0.05, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 1.25)): 
-                print( Movement.get_z_median())
-                pass
+            
             self.suct_motor.setSpeed(1)
+            suct_motor_vals = MovingAverage(30)
+            while (not movement.move_to_tag_position(x = target_x, y = target_y - 0.05, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 1.25)): 
+                suct_motor_vals.add(self.suct_motor_cur.analogRead())
+                med_z_val = movement.get_z_median()
+                if med_z_val is not None:
+                    delta_z = (target_z - med_z_val) * 1000
+                    print(delta_z)
+                    if (abs(delta_z) > ElevatorConfig.Z_TOL_MM):
+                        print("Z adjustment!")
+                        movement.z_vals.clear()
+                        self.stepper.moveRelative(delta_z)
+                
+                pass
             
             start_time = time.time()
             success = False
-            suct_motor_avg = MovingAverage(25)
+            
             while (time.time() - start_time < 3 and not success):
                 if (self.lidar_mgr.get_angle(0) < 100): # We are too close to the car 
                     self.chassis.stop()
                 else:
                     self.chassis.setVector(0, 0.65, 0) 
-                suct_motor_avg.add(self.suct_motor_cur.analogRead())
-                avg = suct_motor_avg.get_avg()
-                if (avg is not None):
-                    if (avg < ArmConfig.sucMotorThresholdCurrent):
+                suct_motor_vals.add(self.suct_motor_cur.analogRead())
+                med = suct_motor_vals.get_med()
+                print(med)
+                if (med is not None):
+                    if (med < ArmConfig.sucMotorThresholdCurrent):
                         self.logger.info("suck-ccess!")
                         success = True
                     
@@ -134,13 +149,15 @@ class Robot():
             self._open_valve()
             self.logger.info("failed insertion to car, trying again")
             self.chassis.move_vector_smooth(0, -0.65, 0)
+            time.sleep(1)
+            self.chassis.stop()
             self.valve_solenoid.setSpeed(0)
-            Movement.reset_errors()
+            movement.reset_errors()
             if (i == num_attempts-1):
                 raise Exception(f"Failed to align after {num_attempts} tries")
             
         self.chassis.move_vector_smooth(0, -0.25, 0)
-        self.stepper.moveTo(ElevatorConfig.CHARGE_PORT_HEIGHT_CM + 0.25)
+        self.stepper.moveRelative(2.5)
         time.sleep(0.25)
         self.chassis.disable()
         
@@ -171,9 +188,11 @@ class Robot():
         self.chassis.enable()
         self.leds.set_circle(Colors.BLUE)
         
-        while (self.lidar_mgr.get_angle(0) < 300): # Drive until we far enough away from car
+        while (self.lidar_mgr.get_angle(0) < 250): # Drive until we far enough away from car
             time.sleep(0.1) # Necessary to allow lidar to update
             self.chassis.setVector(0, -1, 0) 
+        self.chassis.move_vector_smooth(0, 0, -.65) # Rotate a little to not fall into the crack
+        time.sleep(0.5)
         self.valve_solenoid.setSpeed(0)
         self.cam_servo.set_angle(ArmConfig.CAMHOMINGPOS)
         self.stepper.home(4000)
@@ -181,18 +200,12 @@ class Robot():
         self.chassis.move_vector_smooth(0, 1, 0)
         time.sleep(0.5)
         
-    def home(self, Movement):
+    def home(self, movement):
         self.leds.set_static(Colors.WHITE)
-        # self.chassis.move_vector_smooth(0, -1, 0) # Go a bit closer to the wall so that leds can hit the target
-        # time.sleep(1)
         self.chassis.stop()
         # Uses yaw - More positive is robot left side closer to wall
-        while (not Movement.move_to_tag_position(x = -0.192, y = 0.812, yaw = -8.8, use_wall_board = True).is_success(precision_multiplier = 1.5)): # Home itself
+        while (not movement.move_to_tag_position(x = -0.192, y = 0.912, yaw = -8.8, use_wall_board = True).is_success(precision_multiplier = 1.5)): # Home itself
             pass
-        
-        # while (self.lidar_mgr.get_angle(180) > 100): # Drive until we are pretty close to the wall
-        #     time.sleep(0.1) # Necessary to allow lidar to update
-        #     self.chassis.setVector(0, -0.6, 0) 
         
         self.chassis.disable()
         

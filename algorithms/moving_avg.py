@@ -1,4 +1,5 @@
 from collections import deque
+from statistics import median
 
 class MovingAverage:
     def __init__(self, size):
@@ -25,6 +26,12 @@ class MovingAverage:
     def is_full(self):
         """Check if we have a full set of data yet."""
         return len(self.buffer) == self.buffer.maxlen
+    
+    def get_med(self):
+        """Calculate the current median."""
+        if not self.is_full():
+            return None
+        return median(self.buffer)
 
     def clear(self):
         """Reset the buffer."""

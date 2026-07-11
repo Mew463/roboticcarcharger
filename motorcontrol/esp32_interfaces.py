@@ -53,8 +53,12 @@ class Stepper(Esp32CommBase):
         super().__init__(ser)
         self.curPos = None
     
-    def moveTo(self, height_cm: int):
-        self.curPos = height_cm * ElevatorConfig.STEPS_PER_CM
+    def moveTo(self, height_mm: int):
+        self.curPos = height_mm * ElevatorConfig.STEPS_PER_MM
+        super().sendCommand('E', 0, self.curPos)
+        
+    def moveRelative(self, height_mm: int):
+        self.curPos += height_mm * ElevatorConfig.STEPS_PER_MM
         super().sendCommand('E', 0, self.curPos)
 
     def home(self, speed: int):

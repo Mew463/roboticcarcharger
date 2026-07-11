@@ -3,10 +3,11 @@ import termios
 import tty
 import select
 import logging
-from time import sleep
+import time
 
 from settings.config import *
 from robot import Robot
+from algorithms.moving_avg import *
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("robot")
@@ -18,8 +19,8 @@ robot.chassis.enable()
 # Config
 # -----------------------
 chassis_pwr = 1
-stepper_curpos = ElevatorConfig.CHARGE_PORT_HEIGHT_CM
-stepper_increment = 1
+stepper_curpos = ElevatorConfig.CHARGE_PORT_HEIGHT_MM
+stepper_increment = 10
 servo_increment = 5
 servo_curpos = ArmConfig.chargerServoStartPos
 camservo_curpos = ArmConfig.CAMHOMINGPOS
@@ -43,17 +44,17 @@ def handle_key(ch):
     global stepper_curpos, servo_curpos, camservo_curpos, suctmotor_tog, valve_solenoid_tog
 
     if ch == 'w':
-        robot.chassis.setVector(0, chassis_pwr, 0)
+        robot.chassis.setVector(0, chassis_pwr, 0, accel = False)
     elif ch == 's':
-        robot.chassis.setVector(0, -chassis_pwr, 0)
+        robot.chassis.setVector(0, -chassis_pwr, 0, accel = False)
     elif ch == 'd':
-        robot.chassis.setVector(-chassis_pwr, 0, 0)
+        robot.chassis.setVector(-chassis_pwr, 0, 0, accel = False)
     elif ch == 'a':
-        robot.chassis.setVector(chassis_pwr, 0, 0)
+        robot.chassis.setVector(chassis_pwr, 0, 0, accel = False)
     elif ch == 'q':
-        robot.chassis.setVector(0, 0, chassis_pwr)
+        robot.chassis.setVector(0, 0, chassis_pwr, accel = False)
     elif ch == 'e':
-        robot.chassis.setVector(0, 0, -chassis_pwr)
+        robot.chassis.setVector(0, 0, -chassis_pwr, accel = False)
 
     elif ch == 'h':
         robot.stepper.home(4000)
@@ -96,6 +97,12 @@ def handle_key(ch):
     elif ch == '[':
         suctmotor_tog = not suctmotor_tog
         robot.suct_motor.setSpeed(1 if suctmotor_tog else 0)
+    elif ch == '-':
+        suct_motor_avg = MovingAverage(25)
+        for i in range(1000):
+            suct_motor_avg.add(robot.suct_motor_cur.analogRead())
+            avg = suct_motor_avg.get_avg()
+            print(avg)
     elif ch == ']':
         valve_solenoid_tog = not valve_solenoid_tog
         if valve_solenoid_tog:

@@ -25,7 +25,7 @@ msg_receiver = MessagingReceiverWrapper(messaging)
 msg_receiver.start()
 logger.addHandler(messaging)
 my_blue_panther = TeslaControl()
-Movement = FusedMovement(robot.chassis, robot.charuco_tracking)
+movement = FusedMovement(robot.chassis, robot.charuco_tracking)
 
 # Variables to help determine when car can/should charge
 was_car_gone = False
@@ -36,15 +36,12 @@ car_detected_start_time = time.time()
 car_gone_start_time = time.time()
 
 def is_car_in_distance(vals: DistanceThreshold) -> bool:
-    return (abs(robot.lidar_mgr.get_angle(300) - vals.target_distance) < vals.threshold)
+    return (abs(robot.lidar_mgr.get_angle(vals.angle) - vals.target_distance) < vals.threshold)
 
-# if (is_car_in_distance(CarConfig.CAR_PLUGGED_DIST)):
-#     robot.state = RobotStates.IDLE_CHARGING
-#     logger.info("SET TO IDLE_CHARGING!")
-#     messaging.send_message("SET TO IDLE_CHARGING!")
-    
-# robot.state = RobotStates.REMOVING
-# robot.home(Movement)
+if (is_car_in_distance(CarConfig.CAR_PLUGGED_DIST)):
+    robot.state = RobotStates.IDLE_CHARGING
+    logger.info("SET TO IDLE_CHARGING!")
+    messaging.send_message("SET TO IDLE_CHARGING!")
 
 try:
     while not stop_event.is_set(): 
@@ -61,7 +58,7 @@ try:
                     robot.leds.set_static(Colors.BLACK)
                     logger.info("Manual car charging criteria not met!")
                     if not car_parked_in_distance:
-                        messaging.send_message(f"Car not detected in range ({robot.lidar_mgr.get_angle(300)} mm)")
+                        messaging.send_message(f"Car not detected in range ({robot.lidar_mgr.get_angle(CarConfig.CAR_PARKED_DIST.angle)} mm)")
                     if not car_ready_to_charge:
                         messaging.send_message("Required car telemetry not met")
             
@@ -70,7 +67,7 @@ try:
                 car_ready_to_charge = my_blue_panther.car_ready_to_be_charged()
                 
             if (was_car_gone == False): # Handle resetting the car_gone flag
-                if (robot.lidar_mgr.get_angle(300) > CarConfig.CAR_PARKED_DIST.target_distance + CarConfig.CAR_PARKED_DIST.threshold * 2 and time.time() - car_gone_start_time > 10):
+                if (robot.lidar_mgr.get_angle(CarConfig.CAR_PARKED_DIST.angle) > CarConfig.CAR_PARKED_DIST.target_distance + CarConfig.CAR_PARKED_DIST.threshold * 2 and time.time() - car_gone_start_time > 10):
                     car_gone_start_time = time.time()
                     logger.info("Lidar detected car has left!")
                     car_state = my_blue_panther.get_charging_related_data()
@@ -95,9 +92,9 @@ try:
         elif robot.state == RobotStates.INSERTING:
             messaging.send_message("Plugging in!")
         
-            robot.approach()
+            robot.approach(my_blue_panther)
             
-            robot.align(Movement, my_blue_panther)
+            robot.align(movement, my_blue_panther)
             
             robot.insert_charger()
 
@@ -122,7 +119,7 @@ try:
 
             robot.get_car_clearance()
 
-            robot.home(Movement)
+            robot.home(movement)
         
             robot.cam_servo.set_angle(ArmConfig.CAMTESLAPOS)
             robot.leds.set_static(Colors.GREEN)

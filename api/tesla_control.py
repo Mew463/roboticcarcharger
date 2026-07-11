@@ -24,7 +24,7 @@ class TeslaControl:
             self.logger.error(f"TeslaControl: Error loading secrets: {e}")
             raise  # Halt because we can't function without these
 
-    def _send_command(self, endpoint, params=None):
+    def _send_command(self, endpoint, wait_for_completion = "true"):
         """Helper function to handle all POST requests to Tessie."""
         if not self.token or not self.vin:
             self.logger.error("TeslaControl: Missing credentials.")
@@ -34,11 +34,9 @@ class TeslaControl:
         
         # Default parameters for all commands
         default_params = {
-            "wait_for_completion": "true",
+            "wait_for_completion": wait_for_completion,
             "max_attempts": 3
         }
-        if params:
-            default_params.update(params)
 
         headers = {
             "Authorization": f"Bearer {self.token}",
@@ -160,12 +158,12 @@ class TeslaControl:
         """Activates the rear trunk."""
         return self._send_command("activate_rear_trunk")
 
-    def open_or_unlatch_charge_port(self, num_tries = 3):
+    def open_or_unlatch_charge_port(self, num_tries = 3, wait_for_completion = "true"):
         # return self._send_command("open_charge_port")
         """Opens or unlatches the charge port."""
         success = False
         for i in range (num_tries):
-            success = self._send_command("open_charge_port")
+            success = self._send_command("open_charge_port", wait_for_completion)
             if (success):
                 return True
         return False

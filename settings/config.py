@@ -27,15 +27,17 @@ class ChassisConfig:
     secondsPerAngle = 3.3/90
 
 class ElevatorConfig:
-    STEPS_PER_CM = 418.75
-    CHARGE_PORT_HEIGHT_CM = 20
+    STEPS_PER_MM = 41.875
+    CHARGE_PORT_HEIGHT_MM = 210
+    
+    Z_TOL_MM = 4
 
 class ArmConfig:
-    sucMotorThresholdCurrent = 2315
+    sucMotorThresholdCurrent = 2320
     servoThresholdcurrent = 2800
     
     chargerServoStartPos = 157
-    chargerServoEndPos = 42
+    chargerServoEndPos = 47
     
     CAMHOMINGPOS = 170
     CAMTESLAPOS = 70
@@ -67,16 +69,19 @@ class CameraConfig:
 class DistanceThreshold:
     target_distance: int
     threshold: int
+    angle: int
 
 class CarConfig:
     GEOFENCE_RADIUS_METERS = 10
     CAR_PARKED_DIST = DistanceThreshold(
         target_distance=450,
-        threshold=150
+        threshold=150,
+        angle=300
     )
     CAR_PLUGGED_DIST = DistanceThreshold(
         target_distance=98.5,
-        threshold=20
+        threshold=20,
+        angle=0
     )
     MAX_MOVING_DIST = 1500
     

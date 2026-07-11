@@ -103,7 +103,7 @@ class Chassis(SafeActuatorBase):
 
             time.sleep(update_delay)
     
-    def setVector(self, x, y, rot):
+    def setVector(self, x, y, rot, accel = True):
         FRval = y + x + rot
         FLval = y - x - rot
         BRval = y - x + rot
@@ -132,6 +132,9 @@ class Chassis(SafeActuatorBase):
                 current_val = max(current_val - adj_acceleration, target_val)
            
             current_val = self._constrain(current_val, -1, 1)
-            self.current_vals[i] = current_val
+            if accel:
+                self.current_vals[i] = current_val
+            else:
+                self.current_vals[i] = target_val 
 
         self.setSpeeds(self.current_vals[0], self.current_vals[1], self.current_vals[2], self.current_vals[3])
