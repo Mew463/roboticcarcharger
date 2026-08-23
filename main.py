@@ -40,6 +40,7 @@ def is_car_in_distance(vals: DistanceThreshold) -> bool:
 
 if (is_car_in_distance(CarConfig.CAR_PLUGGED_DIST)):
     robot.state = RobotStates.IDLE_CHARGING
+    robot.leds.set_breathing(Colors.BLUE)
     logger.info("SET TO IDLE_CHARGING!")
     messaging.send_message("SET TO IDLE_CHARGING!")
 
@@ -73,7 +74,6 @@ try:
                     car_state = my_blue_panther.get_charging_related_data()
                     if (car_state is not None and car_state["is_at_charger"] == False):
                         logger.info("Car has left geofence")
-                        messaging.send_message("Car has left geofence")
                         was_car_gone = True
 
             if (car_parked_in_distance and was_car_gone): # Automatic detection loop
@@ -137,4 +137,4 @@ except Exception as e:
     traceback.print_exc()
     robot.leds.set_static(Colors.RED) # Indicate crashing occurred
 finally: 
-    robot.lidar_mgr.stop()
+    robot.chassis.destroy()

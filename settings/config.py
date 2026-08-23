@@ -43,17 +43,6 @@ class ArmConfig:
     CAMTESLAPOS = 70
     
 class CameraConfig:
-    ### 99$ Camera 720p 60fps
-    # K = np.array( 
-    # [
-    #     [500.7157106383602, 0.0, 682.3971711610658],
-    #     [0.0, 499.69894450486436, 386.46595623898685],
-    #     [0.0, 0.0, 1.0]
-    # ], dtype=np.float32)
-    
-    # dist = np.array([-0.030042772960827475, -0.03431442937850516, 0.00026535055662068333, -0.0013406833405413719, 0.009221957389354092], dtype=np.float32)  
-    
-    ### Camera at 1080p 30fps    
     K = np.array( 
     [
         [773.442885134213, 0.0, 1024.8263951684214],
@@ -63,7 +52,7 @@ class CameraConfig:
     
     dist = np.array([-0.01196480038446067, -0.04646810566273238, -0.000800085816789049, -0.000435858940564193, 0.01317977322544761], dtype=np.float32)  
     INITIAL_BRIGHTNESS = 0
-    SETPOINT_BRIGHTNESS = 20 # (Going higher has issues with being too bright and causing too much glare)
+    SETPOINT_BRIGHTNESS = 15 # (Going higher has issues with being too bright and causing too much glare)
 
 @dataclass
 class DistanceThreshold:
@@ -72,7 +61,7 @@ class DistanceThreshold:
     angle: int
 
 class CarConfig:
-    GEOFENCE_RADIUS_METERS = 10
+    GEOFENCE_RADIUS_METERS = 15
     CAR_PARKED_DIST = DistanceThreshold(
         target_distance=450,
         threshold=150,

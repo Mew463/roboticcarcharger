@@ -42,6 +42,12 @@ class Robot():
         self.state = RobotStates.IDLE_PARKED
         self.insertion_state = None
         self.removal_state = RemovalStates.REMOVING_CHARGER
+        self.leds.set_static(Colors.BLACK)
+        
+    def destroy(self):
+        self.lidar_mgr.stop()
+        self.chassis.stop()
+        self.charger_servo.disable()
         
     def button0_is_pushed(self):
         if time.time() - self.last_but_push > 0.5:
@@ -70,7 +76,9 @@ class Robot():
         self.leds.set_circle(Colors.BLUE)
         self.stepper.home(4000)
         self.chassis.enable()
-        
+        self.charger_servo.enable()
+        self.charger_servo.set_angle(ArmConfig.chargerServoStartPos) # Ensure the charging servo is in the starting position. Cannot guarantee this.
+
         self.chassis.move_vector_smooth(0, -1, 0) # backup
         time.sleep(1)
         
@@ -85,12 +93,15 @@ class Robot():
             self.chassis.setVector(0, 0.5, 0) 
 
         self.chassis.move_vector_smooth(0, 0, 0)
+        self.charger_servo.disable()
         
     def align(self, movement, tesla_control:TeslaControl):
         self.cam_servo.set_angle(ArmConfig.CAMTESLAPOS)
         self.stepper.moveTo(ElevatorConfig.CHARGE_PORT_HEIGHT_MM)
         cur_led_brightness = CameraConfig.INITIAL_BRIGHTNESS
         self.leds.set_static(Colors.WHITE, brightness = cur_led_brightness)
+        
+        
         # Move left suction cup suck more = yaw more negative 
         # Move robot leftwards = x more positive 
         target_x = -0.0798 - 0.005
@@ -108,19 +119,18 @@ class Robot():
                     cur_led_brightness += led_error * 0.1 # Only using I term 
                     cur_led_brightness = max(0, min(cur_led_brightness, 100))
                     self.leds.set_static(Colors.WHITE, cur_led_brightness)
-                    print(f"led bright:{cur_led_brightness} frame bright: {cur_frame_brightness}")
+                    self.logger.info(f"led bright:{cur_led_brightness} frame bright: {cur_frame_brightness}")
                 pass
             
             self.suct_motor.setSpeed(1)
-            suct_motor_vals = MovingAverage(30)
-            while (not movement.move_to_tag_position(x = target_x, y = target_y - 0.05, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 1.25)): 
+            suct_motor_vals = MovingAverage(50)
+            while (not movement.move_to_tag_position(x = target_x, y = target_y - 0.05, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 1.5)): 
                 suct_motor_vals.add(self.suct_motor_cur.analogRead())
                 med_z_val = movement.get_z_median()
                 if med_z_val is not None:
                     delta_z = (target_z - med_z_val) * 1000
-                    print(delta_z)
                     if (abs(delta_z) > ElevatorConfig.Z_TOL_MM):
-                        print("Z adjustment!")
+                        self.logger.info(f"Z adjustment by {delta_z} mm")
                         movement.z_vals.clear()
                         self.stepper.moveRelative(delta_z)
                 
@@ -136,9 +146,9 @@ class Robot():
                     self.chassis.setVector(0, 0.65, 0) 
                 suct_motor_vals.add(self.suct_motor_cur.analogRead())
                 med = suct_motor_vals.get_med()
-                print(med)
+                self.logger.info(f"Suction motor median: {med}")
                 if (med is not None):
-                    if (med < ArmConfig.sucMotorThresholdCurrent):
+                    if (med < ArmConfig.sucMotorThresholdCurrent and self.lidar_mgr.get_angle(0) < 100):
                         self.logger.info("suck-ccess!")
                         success = True
                     

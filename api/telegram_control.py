@@ -72,19 +72,22 @@ class TelegramControl(logging.Handler):
             data = r.json()
             return data.get("result", [])
         except Exception as e:
-            print("Telegram error:", e)
+            self.logger.error(f"Telegram error: {e}")
             return []
 
     def send_message(self, text):
-        requests.get(
-            f"https://api.telegram.org/bot{self.token}/sendMessage",
-            params={
-                "chat_id": self.chat_id,
-                "text": text
-            },
-            timeout=5
-        )
-        
+        try:
+            requests.get(
+                f"https://api.telegram.org/bot{self.token}/sendMessage",
+                params={
+                    "chat_id": self.chat_id,
+                    "text": text
+                },
+                timeout=10
+            )
+        except Exception as e: 
+            self.logger.error(f"Telegram error: {e}")
+
     def send_photo(self):
         self.camera.save_frame()
         url = f"https://api.telegram.org/bot{self.token}/sendPhoto"

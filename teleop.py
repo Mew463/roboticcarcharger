@@ -156,6 +156,5 @@ try:
 
 finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old)
-    robot.lidar_mgr.stop()
-    robot.chassis.stop()
+    robot.chassis.destroy()
     print("Clean exit")
