@@ -134,9 +134,9 @@ class FusedMovement:
             else: # loss_ratio < 0.5
                 tracking_type = TrackingTypes.BRIEF_LOST
                 self.am_lost.append(True)
-        if (self.last_tracking_type != tracking_type): # Only print right when we switch
-            self.logger.info(f"Using tracking type: {TRACKING_NAMES[tracking_type]}")
-        self.last_tracking_type = tracking_type
+        # if (self.last_tracking_type != tracking_type): # Only print right when we switch
+        #     self.logger.info(f"Using tracking type: {TRACKING_NAMES[tracking_type]}")
+        # self.last_tracking_type = tracking_type
         return tracking_type
     
     def get_z_median(self):

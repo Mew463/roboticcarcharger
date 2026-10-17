@@ -103,7 +103,13 @@ try:
             
         elif robot.state == RobotStates.IDLE_CHARGING:
             time.sleep(0.1) # Actually might be important
-            if (robot.button0_was_pushed() == True or msg_receiver.get_cmd() == "/unplug"):
+            button = robot.button0_was_pushed()
+            cmd = msg_receiver.get_cmd() == "/unplug"
+            if (button or cmd):
+                if (button):
+                    logger.info("Button was pushed");
+                elif (cmd):
+                    logger.info("Unplug cmd received")
                 robot.leds.set_static(Colors.YELLOW)
                 robot.state = RobotStates.REMOVING
                 robot.removal_state = RemovalStates.REMOVING_CHARGER
@@ -137,4 +143,4 @@ except Exception as e:
     traceback.print_exc()
     robot.leds.set_static(Colors.RED) # Indicate crashing occurred
 finally: 
-    robot.chassis.destroy()
+    robot.destroy()

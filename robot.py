@@ -108,7 +108,7 @@ class Robot():
         target_y = 0.308
         target_yaw = 0 - 0.1
         target_z = -0.177
-        num_attempts = 3
+        num_attempts = 6
         for i in range(num_attempts): # ALIGNING LOOP
             
             while (not movement.move_to_tag_position(x = target_x, y = target_y, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 2)): 
@@ -146,7 +146,7 @@ class Robot():
                     self.chassis.setVector(0, 0.65, 0) 
                 suct_motor_vals.add(self.suct_motor_cur.analogRead())
                 med = suct_motor_vals.get_med()
-                self.logger.info(f"Suction motor median: {med}")
+                # self.logger.info(f"Suction motor median: {med}")
                 if (med is not None):
                     if (med < ArmConfig.sucMotorThresholdCurrent and self.lidar_mgr.get_angle(0) < 100):
                         self.logger.info("suck-ccess!")

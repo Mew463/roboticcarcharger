@@ -156,5 +156,5 @@ try:
 
 finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old)
-    robot.chassis.destroy()
+    robot.destroy()
     print("Clean exit")
