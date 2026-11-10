@@ -141,6 +141,7 @@ except KeyboardInterrupt:
 except Exception as e:
     import traceback
     traceback.print_exc()
+    messaging.send_message(e)
     robot.leds.set_static(Colors.RED) # Indicate crashing occurred
 finally: 
     robot.destroy()

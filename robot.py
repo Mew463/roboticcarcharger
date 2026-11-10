@@ -1,6 +1,5 @@
 ### Initializes all robot actuators and sensors
 ### Defines higher level actions that are important for the robot to do
-###
 
 import serial
 import time
@@ -13,6 +12,7 @@ from settings import pins
 from gpiozero import Button
 from algorithms.robot_states import *
 from algorithms.moving_avg import *
+from algorithms.timeout import Timeout
 from settings.config import *
 from api.tesla_control import TeslaControl
 
@@ -87,9 +87,11 @@ class Robot():
         
         self.chassis.move_vector_smooth(0, 0, 0.65) # Rotate a little to align better with car
         time.sleep(0.5)
-            
+        
+        timeout = Timeout(5, "approach")
         while (self.lidar_mgr.get_angle(0) > 300): # Drive until we are close to the car
             time.sleep(0.1) # Necessary to allow lidar to update
+            timeout.check()
             self.chassis.setVector(0, 0.5, 0) 
 
         self.chassis.move_vector_smooth(0, 0, 0)
@@ -110,21 +112,23 @@ class Robot():
         target_z = -0.177
         num_attempts = 6
         for i in range(num_attempts): # ALIGNING LOOP
-            
+            coarse_timeout = Timeout(30, "coarse alignment")
             while (not movement.move_to_tag_position(x = target_x, y = target_y, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 2)): 
-                
+                coarse_timeout.check()
                 cur_frame_brightness = self.charuco_tracking.get_frame_brightness()
                 if cur_frame_brightness is not None:
                     led_error = CameraConfig.SETPOINT_BRIGHTNESS - cur_frame_brightness
                     cur_led_brightness += led_error * 0.1 # Only using I term 
                     cur_led_brightness = max(0, min(cur_led_brightness, 100))
                     self.leds.set_static(Colors.WHITE, cur_led_brightness)
-                    self.logger.info(f"led bright:{cur_led_brightness} frame bright: {cur_frame_brightness}")
+                    # self.logger.info(f"led bright:{cur_led_brightness} frame bright: {cur_frame_brightness}")
                 pass
             
             self.suct_motor.setSpeed(1)
             suct_motor_vals = MovingAverage(50)
+            fine_timeout = Timeout(60, "fine alignment")
             while (not movement.move_to_tag_position(x = target_x, y = target_y - 0.05, yaw = target_yaw, use_wall_board = False).is_success(precision_multiplier = 1.5)): 
+                fine_timeout.check()
                 suct_motor_vals.add(self.suct_motor_cur.analogRead())
                 med_z_val = movement.get_z_median()
                 if med_z_val is not None:
@@ -197,8 +201,9 @@ class Robot():
     def get_car_clearance(self):
         self.chassis.enable()
         self.leds.set_circle(Colors.BLUE)
-        
+        timeout = Timeout(5, "car clearance")
         while (self.lidar_mgr.get_angle(0) < 250): # Drive until we far enough away from car
+            timeout.check()
             time.sleep(0.1) # Necessary to allow lidar to update
             self.chassis.setVector(0, -1, 0) 
         self.chassis.move_vector_smooth(0, 0, -.65) # Rotate a little to not fall into the crack
@@ -214,7 +219,9 @@ class Robot():
         self.leds.set_static(Colors.WHITE)
         self.chassis.stop()
         # Uses yaw - More positive is robot left side closer to wall
+        timeout = Timeout(30, "homing")
         while (not movement.move_to_tag_position(x = -0.192, y = 0.912, yaw = -8.8, use_wall_board = True).is_success(precision_multiplier = 1.5)): # Home itself
+            timeout.check()
             pass
         
         self.chassis.disable()
